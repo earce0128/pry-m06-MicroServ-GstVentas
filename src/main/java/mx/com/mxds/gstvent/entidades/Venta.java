@@ -6,10 +6,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class Venta {
 	private String idOrden;
+	@NotNull(message = "La fecha de la venta es obligatoria")
+	@FutureOrPresent(message = "La fecha de venta debe ser presente o futura")
+	@JsonFormat(pattern = "yyyy-MM-dd")
+	//@JsonFormat(pattern = "dd-MM-yyyy")
 	private LocalDate fechaVenta;
 	private Long idVendedor;
+	@NotBlank(message = "El nombre del vendedor es obligatotio")
 	private String nombreVendedor;
 	private String status;
 	private BigDecimal subtotal;
@@ -24,7 +35,6 @@ public class Venta {
 	
 	public Venta(String idOrden, LocalDate fechaVenta, Long idVendedor, String nombreVendedor, String status,
 			BigDecimal subtotal, double iva, BigDecimal total) {
-		super();
 		this.idOrden = idOrden;
 		this.fechaVenta = fechaVenta;
 		this.idVendedor = idVendedor;

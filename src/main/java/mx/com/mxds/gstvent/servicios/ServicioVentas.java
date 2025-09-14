@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import mx.com.mxds.gstvent.apiweb.IServicioVentas;
+import mx.com.mxds.gstvent.core.IServicioVentas;
 import mx.com.mxds.gstvent.entidades.ArticuloVenta;
 import mx.com.mxds.gstvent.entidades.DetOrdVenta;
 import mx.com.mxds.gstvent.entidades.PagoVenta;
@@ -41,13 +41,9 @@ public class ServicioVentas implements IServicioVentas {
 		this.repoArtVtas = repoArtVtas;
 	}
 
-
-
 	public void setRepoDetVenta(IRepositorioDetOrdVenta repoDetVenta) {
 		this.repoDetVenta = repoDetVenta;
 	}
-
-
 
 	public Venta crearVenta(Venta venta, List<DetOrdVenta> detalles, PagoVenta pago) {
         // Validar stock antes de procesar la venta
@@ -65,7 +61,6 @@ public class ServicioVentas implements IServicioVentas {
         }
         
         // Guardar venta
-        //Venta ventaGuardada = ventaRepository.save(venta);
         Venta ventaGuardada = repoVentas.save(venta);
         
         // Guardar detalles y actualizar stock
@@ -74,19 +69,22 @@ public class ServicioVentas implements IServicioVentas {
             repoDetVenta.save(detalle);
             
             // Actualizar stock
-            //ArticuloVenta articulo = articuloRepository.findById(detalle.getIdArticulo()).get();
             ArticuloVenta articulo = repoArtVtas.findById(detalle.getIdArticulo()).get();
             articulo.setStock(articulo.getStock() - detalle.getCantidad());
-            //articuloRepository.updateStock(articulo.getIdArticulo(), articulo.getStock());
             repoArtVtas.updateStock(articulo.getIdArticulo(), articulo.getStock());
         }
+        
+        BigDecimal subTotal = this.calcularSubTotalVenta(ventaGuardada.getIdOrden());
+        BigDecimal total = this.calcularTotalVenta(ventaGuardada.getIdOrden());
+        
+        ventaGuardada.setSubtotal(subTotal);
+        ventaGuardada.setTotal(total);
         
         // Guardar pago
         if (pago != null) {
             pago.setIdOrdenVta(ventaGuardada.getIdOrden());
             repoPagoVenta.save(pago);
             ventaGuardada.setPago(pago);
-            //ventaRepository.update(ventaGuardada);
             repoVentas.update(ventaGuardada);
         }
         
@@ -100,13 +98,17 @@ public class ServicioVentas implements IServicioVentas {
         if (ventaOpt.isPresent()) {
             Venta venta = ventaOpt.get();
             
+            //System.out.println("idOrden: " + idOrder + " Venta: " + venta);
+            
             // Obtener detalles
-            List<DetOrdVenta> detalles = repoDetVenta.findByOrden(idOrder);
-            venta.setDetArticulos(detalles);
+            //List<DetOrdVenta> detalles = repoDetVenta.findByOrden(idOrder);
+            //System.out.println("OrdDet: " + detalles);
+            
+            //venta.setDetArticulos(detalles);
             
             // Obtener pago
-            Optional<PagoVenta> pagoOpt = repoPagoVenta.findByOrderId(idOrder);
-            pagoOpt.ifPresent(venta::setPago);
+            //Optional<PagoVenta> pagoOpt = repoPagoVenta.findByOrderId(idOrder);
+            //pagoOpt.ifPresent(venta::setPago);
             
             return venta;
         }
@@ -146,6 +148,7 @@ public class ServicioVentas implements IServicioVentas {
         return false;
     }
     
+    @Override
     public BigDecimal calcularTotalVenta(String idOrder) {
         //Optional<Venta> ventaOpt = ventaRepository.findById(idOrder);
     	Optional<Venta> ventaOpt = repoVentas.findById(idOrder);
@@ -170,4 +173,34 @@ public class ServicioVentas implements IServicioVentas {
         }
         return BigDecimal.ZERO;
     }
+    
+    @Override
+    public BigDecimal calcularSubTotalVenta(String idOrder) {
+        //Optional<Venta> ventaOpt = ventaRepository.findById(idOrder);
+    	Optional<Venta> ventaOpt = repoVentas.findById(idOrder);
+        if (ventaOpt.isPresent()) {
+            //Venta venta = ventaOpt.get();
+            List<DetOrdVenta> detalles = repoDetVenta.findByOrden(idOrder);
+            
+            BigDecimal subtotal = BigDecimal.ZERO;
+            for (DetOrdVenta detalle : detalles) {
+                Optional<ArticuloVenta> articuloOpt = repoArtVtas.findById(detalle.getIdArticulo());
+                if (articuloOpt.isPresent()) {
+                    ArticuloVenta articulo = articuloOpt.get();
+                    BigDecimal precioTotal = articulo.getPrecioBase()
+                            .multiply(BigDecimal.valueOf(detalle.getCantidad()));
+                    subtotal = subtotal.add(precioTotal);
+                }
+            }
+            
+            //BigDecimal iva = subtotal.multiply(BigDecimal.valueOf(venta.getIva()));
+            return subtotal;
+        }
+        return BigDecimal.ZERO;
+    }
+
+	@Override
+	public List<Venta> obtenerListaVentas() {
+		return repoVentas.findAll();
+	}
 }

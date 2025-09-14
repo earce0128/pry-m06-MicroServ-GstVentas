@@ -18,9 +18,18 @@ public class DetOrdVentaRepositorioEnMemoria implements IRepositorioDetOrdVenta 
     }
     
     @Override
+    public DetOrdVenta save(String idOrden, DetOrdVenta detalle) {
+    	String key = generateKey(idOrden, detalle.getIdArticulo());
+    	detalles.put(key, detalle);
+        return detalle;
+    }
+    
+    @Override
     public DetOrdVenta save(DetOrdVenta detalle) {
-        String key = generateKey(detalle.getIdOrden(), detalle.getIdArticulo());
+    	//System.out.println("idOrden: " + detalle.getIdOrden() + " idArt: " + detalle.getIdArticulo());
+    	String key = generateKey(detalle.getIdOrden(), detalle.getIdArticulo());
         detalles.put(key, detalle);
+        //System.out.println("Detalles: " + detalles);
         return detalle;
     }
     
@@ -32,6 +41,9 @@ public class DetOrdVentaRepositorioEnMemoria implements IRepositorioDetOrdVenta 
     
     @Override
     public List<DetOrdVenta> findByOrden(String idOrden) {
+    	
+    	//System.out.println("Detalles Todos: " + detalles);
+    	
         return detalles.values().stream()
                 .filter(det -> det.getIdOrden().equals(idOrden))
                 .collect(Collectors.toList());

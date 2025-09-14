@@ -96,11 +96,11 @@ public class ArticuloVentaRepositorioEnMemoria implements IRepositorioArticuloVe
     
     @Override
     public boolean updateStock(long idArticulo, int nuevoStock) {
-        Optional<ArticuloVenta> articuloOpt = findById(idArticulo);
+        
+    	Optional<ArticuloVenta> articuloOpt = findById(idArticulo);
         if (articuloOpt.isPresent()) {
             ArticuloVenta articulo = articuloOpt.get();
             articulo.setStock(nuevoStock);
-            articulos.put(articulo.getIdArticulo(), articulo);
             return true;
         }
         return false;

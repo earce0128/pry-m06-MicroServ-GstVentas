@@ -1,4 +1,4 @@
-package mx.com.mxds.gstvent.apiweb;
+package mx.com.mxds.gstvent.core;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,8 +12,10 @@ public interface IServicioVentas {
 
 	Venta crearVenta(Venta venta, List<DetOrdVenta> detalles, PagoVenta pago);
 	Venta obtenerVenta(String idOrden);
+	List<Venta> obtenerListaVentas();
 	boolean cancelarVenta(String idOrder);
 	BigDecimal calcularTotalVenta(String idOrder);
+	BigDecimal calcularSubTotalVenta(String idOrder);
 	void setRepoVenta(IRepositorioVenta repoVentas);
 
 }
